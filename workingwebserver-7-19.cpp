@@ -8,6 +8,31 @@ const char* password = "YOUR_WIFI_PASSWORD";
 // Web server listens on port 80 (standard HTTP)
 WebServer server(80);
 
+int networkCount = WiFi.scan();
+for(int i = 0; i < networkCount; i++){
+    for(int j = 0; j < 10; j++){
+        if(WiFi.ssid(i) == ssid[j]){
+            
+            //WiFi connect (ssid[j], password[j])
+        }
+    }
+}
+// add a section of the website to prioritize and choose WiFi networks
+// add a section of the website to elementie 
+
+// accept mac addresses and update GPS information 
+
+
+struct modulecmd {
+    int token = 0;
+    bool updateLocation = false;
+    bool updateTime = false;
+    bool updateMap = false;
+    bool restart = false; //restart... 
+    bool reset = false; //reset time, dist, map
+    float setDist = -1; //since 0 is an expeted input, -1 does nothing
+} //SEND PAYLOAD
+
 // The HTML content for your web page, stored in program memory (PROGMEM)
 // This saves RAM and stores the large string in flash.
 const char PROGMEM INDEX_HTML[] = R"rawliteral(
