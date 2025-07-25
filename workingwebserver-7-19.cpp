@@ -1,47 +1,32 @@
 #include <WiFi.h>
 #include <WebServer.h>
+const char* apSSID = "esp-gps-boothe-main";
+const char* apPass = "i'm a chad";
 
-// Replace with your actual Wi-Fi network credentials
-const char* ssid = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
+// missing functions
+// - wifi switching (WIP)
+// -- wifi list in HTML
+// -- wifi priority in HTML
+// - light indicator (1/sec while running w/ gps)
+// - delete all data (5 button presses)
+// - restart module (3 button presses)
+// - pause run (1 button press)
+// - low power (2 button presses)
 
-// Web server listens on port 80 (standard HTTP)
+String ssid[10] = {"google wifi 1", "", "", "", "", "", "", "", "", ""};
+String password[10] = {"oseldiam", "", "", "", "", "", "", "", "", ""};
+
 WebServer server(80);
 
-int networkCount = WiFi.scan();
-for(int i = 0; i < networkCount; i++){
-    for(int j = 0; j < 10; j++){
-        if(WiFi.ssid(i) == ssid[j]){
-            
-            //WiFi connect (ssid[j], password[j])
-        }
-    }
-}
-// add a section of the website to prioritize and choose WiFi networks
-// add a section of the website to elementie 
-
-// accept mac addresses and update GPS information 
-
-
-struct modulecmd {
-    int token = 0;
-    bool updateLocation = false;
-    bool updateTime = false;
-    bool updateMap = false;
-    bool restart = false; //restart... 
-    bool reset = false; //reset time, dist, map
-    float setDist = -1; //since 0 is an expeted input, -1 does nothing
-} //SEND PAYLOAD
-
-// The HTML content for your web page, stored in program memory (PROGMEM)
-// This saves RAM and stores the large string in flash.
+// webpage html saved in progmem
+// i don't know html/css/js :c
 const char PROGMEM INDEX_HTML[] = R"rawliteral(
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 GPS Tracker</title>
+    <title>ESP-GPS Tracker</title>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -63,10 +48,6 @@ const char PROGMEM INDEX_HTML[] = R"rawliteral(
             width: 100%;
             max-width: 960px; /* Increased max-width for PC */
             text-align: center;
-            transition: transform 0.3s ease-in-out;
-        }
-        .container:hover {
-            transform: scale(1.01); /* Slightly less hover effect for wider layout */
         }
         h1 {
             font-size: 36px; /* text-4xl */
@@ -371,15 +352,15 @@ const char PROGMEM INDEX_HTML[] = R"rawliteral(
 </html>
 )rawliteral";
 
-// Placeholder for GPS data (you'll update this in your actual GPS integration)
-struct GpsData {
-  float latitude = 0.0;
+// esp-now gps recieve data format
+typedef struct GpsData {
+  unsigned char mac[6] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  float latitude = 0.0; // lat, long, alt, sat for debug (12 bytes)
   float longitude = 0.0;
   float altitude = 0.0;
-  float speed = 0.0;
-  int satellites = 0;
-  String timestamp = "N/A";
-  String status_message = "Waiting for GPS fix...";
+  uint8_t satellites = 0; //should be under 40, realistically 6-9 on average (1 byte)
+  String timestamp = "N/A"; 
+
 };
 
 GpsData currentGpsData; // Global variable to hold GPS data
@@ -390,10 +371,10 @@ void handleGpsData() {
   json += "\"latitude\":" + String(currentGpsData.latitude, 6);
   json += ",\"longitude\":" + String(currentGpsData.longitude, 6);
   json += ",\"altitude\":" + String(currentGpsData.altitude, 2);
-  json += ",\"speed\":" + String(currentGpsData.speed, 2);
+  //json += ",\"speed\":" + String(currentGpsData.speed, 2);
   json += ",\"satellites\":" + String(currentGpsData.satellites);
   json += ",\"timestamp\":\"" + currentGpsData.timestamp + "\"";
-  json += ",\"status_message\":\"" + currentGpsData.status_message + "\"";
+  //json += ",\"status_message\":\"" + currentGpsData.status_message + "\"";
   json += "}";
   server.send(200, "application/json", json);
 }
@@ -421,6 +402,17 @@ void handleWifiStatus() {
   server.send(200, "application/json", json);
 }
 
+void connectWifi(){
+    int wifiNum = WiFi.scanNetworks();
+    for(int i = 0; i < wifiNum; i++){
+        for(int j = 0; i < 10; i++){
+            if(WiFi.SSID(i) == ssid[j]){
+                WiFi.begin(ssid[j], password[j]);
+            }
+        }
+    }
+}
+
 
 // Setup function: runs once when the ESP32 starts
 void setup() {
@@ -428,19 +420,19 @@ void setup() {
 
   // Connect to Wi-Fi in Station (STA) mode
   Serial.print("Connecting to WiFi: ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP(apSSID, apPass);
+  connectWifi();
 
   // Wait for Wi-Fi connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.print(".");
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP()); // Print the IP address assigned by your router
   }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP()); // Print the IP address assigned by your router
 
   // Set up web server routes
   server.on("/", HTTP_GET, []() {
@@ -449,22 +441,19 @@ void setup() {
   server.on("/api/gps-data", handleGpsData);
   server.on("/api/wifi-status", handleWifiStatus);
 
-  // Start the web server
   server.begin();
   Serial.println("HTTP server started");
 
   // --- Initialize GPS module here (example, replace with actual code) ---
   // For a real application, you would initialize your GPS module (e.g., Serial2.begin(9600);)
-  // and start reading data.
-  // For demonstration, we'll set some dummy data.
+  //DUMMY DATA
   currentGpsData.latitude = 34.0522;
   currentGpsData.longitude = -118.2437;
   currentGpsData.altitude = 100.0;
-  currentGpsData.speed = 10.5;
+  //currentGpsData.speed = 10.5;
   currentGpsData.satellites = 7;
   currentGpsData.timestamp = "2025-07-16T02:30:00Z";
-  currentGpsData.status_message = "GPS data initialized (dummy)";
-  // --- End GPS initialization example ---
+  //currentGpsData.status_message = "GPS data initialized (dummy)";
 }
 
 // Loop function: runs repeatedly
@@ -472,15 +461,4 @@ void loop() {
   server.handleClient(); // Handle incoming client requests
 
   // --- Update GPS data here (example, replace with actual code) ---
-  // In a real application, you would continuously read from your GPS module
-  // and update currentGpsData.
-  // For demonstration, we'll just update the timestamp every few seconds.
-  static unsigned long lastGpsUpdateTime = 0;
-  if (millis() - lastGpsUpdateTime > 10000) { // Update every 10 seconds
-    lastGpsUpdateTime = millis();
-    // Simulate new GPS data or update timestamp
-    currentGpsData.timestamp = String(millis()); // Use millis for a changing timestamp
-    Serial.println("Simulating GPS data update.");
-  }
-  // --- End GPS update example ---
 }
