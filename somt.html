@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP-GPS Tracker</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 20;
+            padding: 10px;
+            background: linear-gradient(to bottom, #3B82F6, #8B5CF6); /* Tailwind blue-500 to purple-600 */
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 12px; /* rounded-xl */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* shadow-2xl */
+            padding: 32px; /* p-8 */
+            width: 100%;
+            max-width: 960px; /* Increased max-width for PC */
+            text-align: center;
+        }
+        h1 {
+            font-size: 36px; /* text-4xl */
+            font-weight: 800; /* font-extrabold */
+            color: #1F2937; /* gray-800 */
+            margin-bottom: 24px; /* mb-6 */
+        }
+        h2 {
+            font-size: 24px; /* text-2xl */
+            font-weight: 700; /* font-bold */
+            color: #374151; /* gray-700 */
+            margin-bottom: 16px; /* mb-4 */
+        }
+        .section {
+            margin-bottom: 24px; /* mb-6 */
+            padding: 16px; /* p-4 */
+            border-radius: 8px; /* rounded-lg */
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* shadow-inner */
+        }
+        .gps-status {
+            background-color: #DBEAFE; /* blue-100 */
+        }
+        .gps-status p:first-child {
+            font-size: 20px; /* text-xl */
+            font-weight: 600; /* font-semibold */
+            color: #1E40AF; /* blue-800 */
+            margin-bottom: 8px; /* mb-2 */
+        }
+        .gps-status p:last-child {
+            font-size: 24px; /* text-2xl */
+            color: #2563EB; /* blue-600 */
+            font-weight: 700; /* font-bold */
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Default to single column */
+            gap: 16px; /* gap-4 */
+            text-align: left;
+        }
+        @media (min-width: 360px) { /* md:grid-cols-2 */
+            .data-grid {
+                grid-template-columns: 1fr 1fr 1fr 1fr;
+            }
+            .col-span-4 {
+                grid-column: span 4 / span 4;
+            }
+        }
+        .data-item {
+            background-color: #F9FAFB; /* gray-50 */
+            padding: 16px; /* p-4 */
+            border-radius: 8px; /* rounded-lg */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+        }
+        .data-item p:first-child {
+            font-size: 18px; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            color: #374151; /* gray-700 */
+        }
+        .data-item p:last-child {
+            font-size: 20px; /* text-xl */
+            color: #1F2937; /* gray-900 */
+            font-weight: 500; /* font-medium */
+        }
+        .wifi-status {
+            margin-top: 32px; /* mt-8 */
+            padding-top: 24px; /* pt-6 */
+            border-top: 1px solid #E5E7EB; /* border-t border-gray-200 */
+            text-align: left;
+        }
+        .wifi-status p {
+            margin-bottom: 8px; /* mb-2 */
+            color: #4B5563; /* gray-600 */
+        }
+        .wifi-status p span {
+            font-weight: 600; /* font-semibold */
+        }
+
+        /* New styles for ESP32 List */
+        .esp32-list-section {
+            background-color: #F0F9FF; /* blue-50 */
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        .esp32-list-section h2 {
+            color: #1D4ED8; /* blue-700 */
+            margin-bottom: 20px;
+        }
+        .esp32-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .esp32-table th, .esp32-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #E0E7FF; /* blue-200 */
+            text-align: left;
+            font-size: 16px;
+        }
+        .esp32-table th {
+            background-color: #BFDBFE; /* blue-200 */
+            font-weight: 700;
+            color: #1E40AF; /* blue-800 */
+            text-transform: uppercase;
+        }
+        .esp32-table tr:last-child td {
+            border-bottom: none;
+        }
+        .esp32-table tbody tr:nth-child(even) {
+            background-color: #E0E7EB; /* grey/gray */
+        }
+        .mac-address {
+            font-family: monospace;
+            font-size: 15px;
+            color: #334155; /* slate-700 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ESP32 GPS Tracker</h1>
+
+        <div class="esp32-list-section">
+            <h2>Connected ESP32s</h2>
+            <table class="esp32-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>MAC</th>
+                        <th>Distance</th>
+                        <th>Time</th>
+                        <th>Last Update</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>01</td>
+                        <td class="mac-address">N/A</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+						<td>0s</td>
+                    </tr>
+                    <tr>
+                        <td>02</td>
+                        <td class="mac-address">dc:06:75:a9:81:b8</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+						<td>0s</td>
+                    </tr>
+                    <tr>
+                        <td>03</td>
+                        <td class="mac-address">dc:06:75:f9:82:9c</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+						<td>0s</td>
+                    </tr>
+                    <tr>
+                        <td>04</td>
+                        <td class="mac-address">28:37:2f:55:92:10</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+						<td>0s</td>
+                    </tr>
+                    <tr>
+                        <td>05</td>
+                        <td class="mac-address">dc:06:75:ab:e5:04</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+						<td>0s</td>
+                    </tr>
+                    <tr>
+                        <td>06</td>
+                        <td class="mac-address">94:a9:90:97:bb:9c</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+						<td>0s</td>
+                    </tr>
+                    <tr>
+                        <td>07</td>
+                        <td class="mac-address">94:a9:90:95:f8:a8</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+						<td>0s</td>
+                    </tr>
+                    <tr>
+                        <td>08</td>
+                        <td class="mac-address">N/A</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+						<td>0s</td>
+                    </tr>
+                    <tr>
+                        <td>09</td>
+                        <td class="mac-address">N/A</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+						<td>0s</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td class="mac-address">N/A</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+						<td>0s</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section gps-status">
+            <p>GPS Data Status:</p>
+            <p id="gps-status-message">Waiting for GPS data...</p>
+        </div>
+
+        <div class="data-grid">
+            <div class="data-item">
+                <p>Latitude:</p>
+                <p id="latitude">N/A</p>
+            </div>
+            <div class="data-item">
+                <p>Longitude:</p>
+                <p id="longitude">N/A</p>
+            </div>
+            <div class="data-item">
+                <p>Calculated Speed:</p>
+                <p id="speed">N/A</p>
+            </div>
+            <div class="data-item">
+                <p>Satellites:</p>
+                <p id="satellites">N/A</p>
+            </div>
+            <div class="data-item">
+                <p>UTC Timestamp:</p>
+                <p id="timestamp">N/A</p>
+            </div>
+            <div class="data-item">
+                <p>Elapsed Time:</p>
+                <p id="totalTime">N/A</p>
+            </div>
+            <div class="data-item">
+                <p>Total Distance</p>
+                <p id = "dist">N/A</p>
+            </div>
+            <div class = "data-item">
+                <p>Average Speed</p>
+                <p id = "avgSpeed">N/A</p>
+            </div>
+        </div>
+
+        <div class="wifi-status">
+            <h2>Wi-Fi Status</h2>
+            <div>
+                <p>
+                    <span>Status:</span> <span id="wifi-status-text">UNKNOWN</span>
+                </p>
+                <p>
+                    <span>IP Address:</span> <span id="wifi-ip-address">N/A</span>
+                </p>
+                <p>
+                    <span>Details:</span> <span id="wifi-details">Attempting to connect to ESP32...</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to fetch GPS data from the ESP32
+        const fetchGpsData = async () => {
+            try {
+                const response = await fetch('/api/gps-data');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                document.getElementById('latitude').textContent = data.latitude !== undefined ? data.latitude.toFixed(6) : 'N/A';
+                document.getElementById('longitude').textContent = data.longitude !== undefined ? data.longitude.toFixed(6) : 'N/A';
+                document.getElementById('speed').textContent = data.speed !== undefined ? data.speed.toFixed(2) + ' km/h' : 'N/A';
+                document.getElementById('satellites').textContent = data.satellites !== undefined ? data.satellites : 'N/A';
+                document.getElementById('timestamp').textContent = data.timestamp || 'N/A';
+                document.getElementById('gps-status-message').textContent = data.status_message || 'GPS data received.';
+
+            } catch (error) {
+                console.error("Could not fetch GPS data from ESP32:", error);
+                document.getElementById('gps-status-message').textContent = 'Failed to load GPS data from ESP32.';
+            }
+        };
+
+        // Function to fetch Wi-Fi status from the ESP32
+        const fetchWifiStatus = async () => {
+            try {
+                const response = await fetch('/api/wifi-status');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                document.getElementById('wifi-status-text').textContent = data.status;
+                document.getElementById('wifi-ip-address').textContent = data.ip_address;
+                document.getElementById('wifi-details').textContent = data.status_message;
+
+            } catch (error) {
+                console.error("Could not fetch Wi-Fi status:", error);
+                document.getElementById('wifi-details').textContent = 'Failed to retrieve Wi-Fi status from ESP32.';
+            }
+        };
+
+        // Initial fetch and set up interval
+        window.onload = function() {
+            fetchGpsData();
+            fetchWifiStatus();
+            setInterval(() => {
+                fetchGpsData();
+                fetchWifiStatus();
+            }, 5000); // Fetch every 5 seconds
+        };
+    </script>
+</body>
+</html>
