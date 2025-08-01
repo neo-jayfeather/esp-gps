@@ -5,44 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ESP-GPS Tracker</title>
     <style>
-    	
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0 20px;
+            background: linear-gradient(to bottom, #3B82F6, #8B5CF6); /* Tailwind blue-500 to purple-600 */
+            color: #333;
+            display: flex;
+            flex-direction: column; /* Changed to column to allow header and container to stack */
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
         #esp-header{
-        	position: sticky;
-            top: 20px;
-            text-align: top;
-            background:#FFFFFF;
-            margin-top:-30px;
+            position: sticky;
+            top: 0;
+            background: #888888;
+            padding: 20px 20px; /* Adjusted padding */
+            opacity: 0.95;
+            width: 100vw; /* Use viewport width for full screen span */
+            z-index: 10;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            margin: 0px;
+            padding: 0px;
+        }
+        
+        #esp-header h1 {
+        	color: #fff;
+            text-align: center;
+            
         }
         #esp-header svg{
-        	position: absolute;
-            top: -15px;
-            left: 0px;
+            position: absolute;
+            inset: 10px 0 0 20px;
             width: 70px;
             height: 70px;
         }
         .svgBody{
-        	fill: linear-gradient(to top right, #70a5ff, #0c4fc2);
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 20;
-            padding: 10px;
-            background: linear-gradient(to bottom, #3B82F6, #8B5CF6); /* Tailwind blue-500 to purple-600 */
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
+            fill: linear-gradient(to top right, #70a5ff, #0c4fc2);
         }
         .container {
             background-color: #fff;
             border-radius: 12px; /* rounded-xl */
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* shadow-2xl */
-            padding: 32px; /* p-8 */
-            width: 100%;
+            padding: 32px 16px; /* p-8 */  
+            width: 95%;
             max-width: 960px; /* Increased max-width for PC */
             text-align: center;
+            margin: 20px; /* Added margin to separate from the header */
         }
         h1 {
             font-size: 36px; /* text-4xl */
@@ -119,7 +131,7 @@
         .wifi-status p span {
             font-weight: 600; /* font-semibold */
         }
-
+        
         /* New styles for ESP32 List */
         .esp32-list-section {
             background-color: #F0F9FF; /* blue-50 */
@@ -163,16 +175,13 @@
     </style>
 </head>
 <body>
-    <div class="container">
-    	<div id = "esp-header">
+    <div id="esp-header">
         <h1>ESP32 GPS Tracker</h1>
-		<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="200" height="200" viewBox="0 0 800 800"><defs><linearGradient id="c" x1="0%" x2="100%" y1="0%" y2="0%"><stop offset="0%" stop-color="#70a5ff"/><stop offset="100%" stop-color="#2065dc"/></linearGradient><linearGradient id="a" x1="0%" x2="100%" y1="0%" y2="0%"><stop offset="0%" stop-color="#dbc204"/><stop offset="100%" stop-color="#fced79"/></linearGradient><linearGradient id="b" x1="0%" x2="100%" y1="0%" y2="0%"><stop offset="0%" stop-color="#a88102"/><stop offset="100%" stop-color="#f0af2e"/></linearGradient></defs><path d="M740 564c-26 66-72 112-134 143a490 490 0 0 1-222 45c-50-1-100-7-148-23-41-14-77-35-106-68-27-31-44-67-49-108a202 202 0 0 1 90-188l2-2c-1-2-2-2-3-2-17-8-36-12-55-14l-14-2c-15-3-25-14-25-30 0-6-2-10-7-13-15-8-27-18-34-34-3-6-5-13-3-20 2-9 10-16 21-17 12-1 24 2 37 4l26 3c20 0 26-5 27-25 3-43 18-81 46-114 23-27 52-43 85-53 24-7 48-10 72-9 47 1 89 17 124 49 24 21 39 48 49 78a213 213 0 0 1-22 182c-4 8-4 8 5 9 22 2 44 4 66 1 27-3 54-7 76-23l22-18c10-10 22-16 36-18 12-2 23 1 31 11 9 11 14 23 18 37a355 355 0 0 1-11 219z"/><path fill="url(#a)" d="M379 62c-26-5-52-6-77-1-59 11-101 44-125 99-6 12-9 25-11 38-1 6 0 7 6 7l17 3c23 4 40 17 54 34 9 11 18 21 30 27 7 4 11 10 14 17 2 7 4 14 4 21 2 16-1 32-10 46a62 62 0 0 1-76 19c-6-2-10-1-15 2-27 18-49 42-65 71-19 32-28 66-23 104 3 27 12 53 27 76 24 38 60 62 102 79s87 24 133 26c39 2 79 0 119-7 45-7 88-20 128-43 37-21 69-49 91-86 27-45 39-95 41-147 1-22-1-44-4-67-3-19-7-37-17-54-6-12-14-14-26-8-10 5-18 11-25 19-13 13-28 22-45 28-47 15-94 17-142 7-6-1-11 1-16 5a129 129 0 0 1-81 31c-2 0-4 1-5-2 0-8 5-15 12-17l8-2c32-9 59-25 78-53a186 186 0 0 0 24-148c-9-37-26-68-56-92-20-16-43-26-69-32z"/><path fill="url(#b)" d="M128 254c-12 2-23 0-35-2s-23-4-35-3c-8 0-10 5-6 12 7 11 17 19 31 25l-9-8c-3-2-6-4-6-8 3-2 6 0 9 2 14 6 27 14 40 21 28 15 57 26 90 21 18-2 36-7 50-19 5-5 5-6 1-10-13-12-24-25-35-38a82 82 0 0 0-45-28c-12-2-16-1-21 11-5 13-14 21-29 24m67 98c13 5 27 7 41 6 26-1 44-25 37-51-2-6-3-7-8-3-10 9-20 17-32 24-13 6-26 8-40 3l-33-12c-19-7-39-10-59-9-6 1-8 3-6 9 1 5 5 4 8 4 22 0 43 5 64 14l28 15z"/><path d="M381 609c-19-14-34-31-41-54-10-37 1-71 33-96 25-19 53-30 84-35 28-4 56-1 84 3 24 3 48 6 72 5 14-1 27-2 40-6s16-2 19 10c3 13 0 26-2 39-7 33-18 65-39 92-29 36-64 61-110 69-48 8-95 3-137-25l-3-2z" opacity=".7"/><path fill="url(#c)" d="M439 446c-23 5-43 16-61 31a67 67 0 0 0-20 78c9 23 26 38 48 49 34 17 69 21 106 14 42-8 77-28 104-62a180 180 0 0 0 40-106c0-7-1-8-8-6l-17 5c-24 4-47 1-71-2-21-2-41-6-62-7-20 0-39 1-59 6z"/><path d="M291 210c9-17 24-25 41-22 16 3 29 17 32 33 3 15-1 28-11 40-20 22-52 15-63-14-4-12-4-25 1-37m24-4-2 1c-5 1-7 5-6 9s3 7 7 7c5 1 8-2 10-6 1-5-2-9-9-11zM208 255c5 2 7 5 6 10s-4 8-8 8c-5 0-9-2-10-7-2-6 3-11 12-11z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="200" height="200" viewBox="0 0 800 800"><defs><linearGradient id="c" x1="0%" x2="100%" y1="0%" y2="0%"><stop offset="0%" stop-color="#70a5ff"/><stop offset="100%" stop-color="#2065dc"/></linearGradient><linearGradient id="a" x1="0%" x2="100%" y1="0%" y2="0%"><stop offset="0%" stop-color="#dbc204"/><stop offset="100%" stop-color="#fced79"/></linearGradient><linearGradient id="b" x1="0%" x2="100%" y1="0%" y2="0%"><stop offset="0%" stop-color="#a88102"/><stop offset="100%" stop-color="#f0af2e"/></linearGradient></defs><path d="M740 564c-26 66-72 112-134 143a490 490 0 0 1-222 45c-50-1-100-7-148-23-41-14-77-35-106-68-27-31-44-67-49-108a202 202 0 0 1 90-188l2-2c-1-2-2-2-3-2-17-8-36-12-55-14l-14-2c-15-3-25-14-25-30 0-6-2-10-7-13-15-8-27-18-34-34-3-6-5-13-3-20 2-9 10-16 21-17 12-1 24 2 37 4l26 3c20 0 26-5 27-25 3-43 18-81 46-114 23-27 52-43 85-53 24-7 48-10 72-9 47 1 89 17 124 49 24 21 39 48 49 78a213 213 0 0 1-22 182c-4 8-4 8 5 9 22 2 44 4 66 1 27-3 54-7 76-23l22-18c10-10 22-16 36-18 12-2 23 1 31 11 9 11 14 23 18 37a355 355 0 0 1-11 219z"/><path fill="url(#a)" d="M379 62c-26-5-52-6-77-1-59 11-101 44-125 99-6 12-9 25-11 38-1 6 0 7 6 7l17 3c23 4 40 17 54 34 9 11 18 21 30 27 7 4 11 10 14 17 2 7 4 14 4 21 2 16-1 32-10 46a62 62 0 0 1-76 19c-6-2-10-1-15 2-27 18-49 42-65 71-19 32-28 66-23 104 3 27 12 53 27 76 24 38 60 62 102 79s87 24 133 26c39 2 79 0 119-7 45-7 88-20 128-43 37-21 69-49 91-86 27-45 39-95 41-147 1-22-1-44-4-67-3-19-7-37-17-54-6-12-14-14-26-8-10 5-18 11-25 19-13 13-28 22-45 28-47 15-94 17-142 7-6-1-11 1-16 5a129 129 0 0 1-81 31c-2 0-4 1-5-2 0-8 5-15 12-17l8-2c32-9 59-25 78-53a186 186 0 0 0 24-148c-9-37-26-68-56-92-20-16-43-26-69-32z"/><path fill="url(#b)" d="M128 254c-12 2-23 0-35-2s-23-4-35-3c-8 0-10 5-6 12 7 11 17 19 31 25l-9-8c-3-2-6-4-6-8 3-2 6 0 9 2 14 6 27 14 40 21 28 15 57 26 90 21 18-2 36-7 50-19 5-5 5-6 1-10-13-12-24-25-35-38a82 82 0 0 0-45-28c-12-2-16-1-21 11-5 13-14 21-29 24m67 98c13 5 27 7 41 6 26-1 44-25 37-51-2-6-3-7-8-3-10 9-20 17-32 24-13 6-26 8-40 3l-33-12c-19-7-39-10-59-9-6 1-8 3-6 9 1 5 5 4 8 4 22 0 43 5 64 14l28 15z"/><path d="M381 609c-19-14-34-31-41-54-10-37 1-71 33-96 25-19 53-30 84-35 28-4 56-1 84 3 24 3 48 6 72 5 14-1 27-2 40-6s16-2 19 10c3 13 0 26-2 39-7 33-18 65-39 92-29 36-64 61-110 69-48 8-95 3-137-25l-3-2z" opacity=".7"/><path fill="url(#c)" d="M439 446c-23 5-43 16-61 31a67 67 0 0 0-20 78c9 23 26 38 48 49 34 17 69 21 106 14 42-8 77-28 104-62a180 180 0 0 0 40-106c0-7-1-8-8-6l-17 5c-24 4-47 1-71-2-21-2-41-6-62-7-20 0-39 1-59 6z"/><path d="M291 210c9-17 24-25 41-22 16 3 29 17 32 33 3 15-1 28-11 40-20 22-52 15-63-14-4-12-4-25 1-37m24-4-2 1c-5 1-7 5-6 9s3 7 7 7c5 1 8-2 10-6 1-5-2-9-9-11zM208 255c5 2 7 5 6 10s-4 8-8 8c-5 0-9-2-10-7-2-6 3-11 12-11z"/></svg>
+    </div>
 
-
-        
-        </div>
+    <div class="container">
         <div class="esp32-list-section">
-            <h2>Connected ESP32s</h2>
             <table class="esp32-table">
                 <thead>
                     <tr>
@@ -189,70 +198,70 @@
                         <td class="mac-address">N/A</td>
                         <td>N/A</td>
                         <td>N/A</td>
-						<td>0s</td>
+                        <td>0s</td>
                     </tr>
                     <tr>
                         <td>02</td>
                         <td class="mac-address">dc:06:75:a9:81:b8</td>
                         <td>N/A</td>
                         <td>N/A</td>
-						<td>0s</td>
+                        <td>0s</td>
                     </tr>
                     <tr>
                         <td>03</td>
                         <td class="mac-address">dc:06:75:f9:82:9c</td>
                         <td>N/A</td>
                         <td>N/A</td>
-						<td>0s</td>
+                        <td>0s</td>
                     </tr>
                     <tr>
                         <td>04</td>
                         <td class="mac-address">28:37:2f:55:92:10</td>
                         <td>N/A</td>
                         <td>N/A</td>
-						<td>0s</td>
+                        <td>0s</td>
                     </tr>
                     <tr>
                         <td>05</td>
                         <td class="mac-address">dc:06:75:ab:e5:04</td>
                         <td>N/A</td>
                         <td>N/A</td>
-						<td>0s</td>
+                        <td>0s</td>
                     </tr>
                     <tr>
                         <td>06</td>
                         <td class="mac-address">94:a9:90:97:bb:9c</td>
                         <td>N/A</td>
                         <td>N/A</td>
-						<td>0s</td>
+                        <td>0s</td>
                     </tr>
                     <tr>
                         <td>07</td>
                         <td class="mac-address">94:a9:90:95:f8:a8</td>
                         <td>N/A</td>
                         <td>N/A</td>
-						<td>0s</td>
+                        <td>0s</td>
                     </tr>
                     <tr>
                         <td>08</td>
                         <td class="mac-address">N/A</td>
                         <td>N/A</td>
                         <td>N/A</td>
-						<td>0s</td>
+                        <td>0s</td>
                     </tr>
                     <tr>
                         <td>09</td>
                         <td class="mac-address">N/A</td>
                         <td>N/A</td>
                         <td>N/A</td>
-						<td>0s</td>
+                        <td>0s</td>
                     </tr>
                     <tr>
                         <td>10</td>
                         <td class="mac-address">N/A</td>
                         <td>N/A</td>
                         <td>N/A</td>
-						<td>0s</td>
+                        <td>0s</td>
                     </tr>
                 </tbody>
             </table>
@@ -290,11 +299,11 @@
             </div>
             <div class="data-item">
                 <p>Total Distance</p>
-                <p id = "dist">N/A</p>
+                <p id="dist">N/A</p>
             </div>
-            <div class = "data-item">
+            <div class="data-item">
                 <p>Average Speed</p>
-                <p id = "avgSpeed">N/A</p>
+                <p id="avgSpeed">N/A</p>
             </div>
         </div>
 
