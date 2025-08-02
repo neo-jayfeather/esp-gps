@@ -1,48 +1,46 @@
-// 4/17/2025
-
-// ESP32 board: "ESP-WROOM-32 ESP32 ESP-32S Development Board"
-// https://www.amazon.com/ESP-WROOM-32-Development-Microcontroller-Integrated-Compatible/dp/B08D5ZD528
-// It's ESP-32S. Not ESP-32S3 or EPS32S2!
-// select "ESP32 Dev Module"
+// ESP32 board: "ESP-WROOM-32 ESP32 ESP-32S Development Board"- https://www.amazon.com/ESP-WROOM-32-Development-Microcontroller-Integrated-Compatible/dp/B08D5ZD528
 // installed from https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
-// GPS board: "GY-NEO6MV2 NEO-6M GPS Module"
-// https://www.amazon.com/dp/B0B49LB18G
-
+// GPS board: "GY-NEO6MV2 NEO-6M GPS Module" - https://www.amazon.com/dp/B0B49LB18G
 // GPS chip: https://content.u-blox.com/sites/default/files/products/documents/NEO-6_DataSheet_%28GPS.G6-HW-09005%29.pdf
-
-// Connection:
 // GPS VCC <=> ESP32 3V3
 // GPS GND <=> ESP32 GND
 // GPS RX  <=> ESP32 TX2
 // GPS TX  <=> ESP32 RX2
 
+
 #include <HardwareSerial.h>  //serial connections
 #include <TinyGPS++.h>       //gps nmea sentence parsing
-//#include <math.h>            //math
 #include <arduino.h>         //math
 #include <Preferences.h>     //for flash storage
 #include <esp_now.h>         // to send data to a server
 #include <WiFi.h>            //for espnow
 
+
+
+// - light indicator (1/sec while running w/ gps)
+// - delete all data (5 button presses)
+// - restart module (3 button presses)
+// - pause run (1 button press)
+// - low power (2 button presses)
+
 TinyGPSPlus gps;                              //gps
 Preferences preferences;                      //flash
-HardwareSerial GPS_Serial(2);                 // Use UART2
+HardwareSerial GPS_Serial(1);                 // Use UART2
 int cycle = 0;                                //cycle for averaging (maybe use int if hz > 2)
-double currAvgPos[6] = {0, 0, 0, 0, 0, 0};  // first two are for first pos, next two are for second pos, last two are for average including third pos
-double pastAvgPos[2] = {0, 0};
-double pastPos[2] = {0, 0};
-double savedDist = 0;
+float currAvgPos[6] = {0, 0, 0, 0, 0, 0};  // first two are for first pos, next two are for second pos, last two are for average including third pos
+float pastAvgPos[2] = {0, 0}; //for distance, past pos
+float savedDist = 0;
 bool reachLoop = false;
 int gpsConnection = 0;
 bool printLoc = false;
-int gpsWaitTimes[2] = {500, 500};
+int gpsWaitTimes[2] = {100, 100}; //seems to be safe values, note that these are changed in preferences, so these do not matter here
 int lastUpdateTime = 0;
 
 uint8_t broadcastAddress[] = {0xC8, 0x2E, 0x18, 0xF8, 0x50, 0xE0};  //c8:2e:18:f8:50:e0
 typedef struct struct_message {
   unsigned char a[6];
-  double b;
+  float b;
 } struct_message;
 struct_message myData;
 esp_now_peer_info_t peerInfo;
@@ -56,17 +54,15 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {//keep t
   //Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail"); // switch to light indicator?
 }
 void setGPSsettings() {                                // sets gps
-  Serial.print("wt0 - ");
-  Serial.print(gpsWaitTimes[0]);
-  Serial.print(" wt1 - ");
-  Serial.println(gpsWaitTimes[1]);
-  GPS_Serial.begin(9600, SERIAL_8N1, 16, 17);          // Initialize at the current baud rate - should always be 9600 at startup
-  GPS_Serial.write(setBaud1152, sizeof(setBaud1152));  //sends message w/ checksum to change baud rate from 9600 -> 115200
-  delay(gpsWaitTimes[0]);                              // Important: Give the GPS module time to change baud rates, DO NOT REMOVE
+  GPS_Serial.begin(9600, SERIAL_8N1, 20, 21);          // Initialize at the current baud rate - should always be 9600 at startup
+  GPS_Serial.write(setBaud1152, sizeof(setBaud1152));  // sends message w/ checksum to change baud rate from 9600 -> 115200
+  delay(150);
+  //delay(gpsWaitTimes[0]);                              // DO NOT REMOVE - gives GPS module time to change baud rates
   GPS_Serial.end();                                    // closes serial at 9600
-  GPS_Serial.begin(115200, SERIAL_8N1, 16, 17);        // opens serial at 115200
-  GPS_Serial.write(changeHzMsg, sizeof(changeHzMsg));  //sends message w/ checksum to change refresh rate from 1hz --> 5hz
-  delay(gpsWaitTimes[1]);                              // Small delay to allow processing, DO NOT REMOVE
+  GPS_Serial.begin(115200, SERIAL_8N1, 20, 21);        // opens serial at 115200
+  GPS_Serial.write(changeHzMsg, sizeof(changeHzMsg));  // sends message w/ checksum to change refresh rate from 1hz --> 5hz
+  //delay(gpsWaitTimes[1]);                              // DO NOT REMOVE - delay to allow processing
+  delay(150);
 }
 void printData() {
   Serial.print("Latitude: ");
@@ -76,10 +72,10 @@ void printData() {
   Serial.print("  |  Satellites: ");
   Serial.print(gps.satellites.value());
   Serial.print("  |  Total Dist: ");
-  Serial.println(savedDist, 5);
+  Serial.println(savedDist, 5); //could probably be optimized .-.
 }
 void sendData() {
-  unsigned char tempMac[6] = { 0x30, 0xC9, 0x22, 0x31, 0xB8, 0xA4 };
+  unsigned char tempMac[6] = {0x30, 0xC9, 0x22, 0x31, 0xB8, 0xA4};
   memcpy(myData.a, tempMac, sizeof(myData.a));
   myData.b = savedDist;
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));  // Send message via ESP-NOW
@@ -91,7 +87,7 @@ void sendData() {
 }
 void setup() {
   Serial.begin(115200);  // between ESP32 and PC
-
+  Serial.println("serial begin");
   WiFi.mode(WIFI_STA);  //espnow
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error initializing ESP-NOW");
@@ -109,27 +105,27 @@ void setup() {
     return;
   }
 
-  preferences.begin("neo-gps", false);                                       //starts storage, flase is for RW mode
-  savedDist = preferences.getDouble("savedDist", static_cast<double>(0.0));  // retreives distance from flash, otherwise sets it as a (float/double?)
-  gpsWaitTimes[0] = preferences.getInt("waitTime0", static_cast<int>(500));
-  gpsWaitTimes[1] = preferences.getInt("waitTime1", static_cast<int>(500));
-  setGPSsettings();  //why am I saving distance as a double (gotta get that 1e-9km [nm] i guess?)
+  preferences.begin("neo-gps", false); //starts storage, flase is for RW mode
+  savedDist = preferences.getFloat("savedDist", static_cast<float>(0.0));  //retreives distance from flash, otherwise sets it as a (float/double?)
+  gpsWaitTimes[0] = preferences.getInt("waitTime0", static_cast<int>(100));
+  gpsWaitTimes[1] = preferences.getInt("waitTime1", static_cast<int>(100));
+  setGPSsettings();
 }
 
-double toRads(double degrees) {
+float toRads(float degrees) {
   return degrees * PI / 180;  //pi is a (double?) defined by arduino
 }
-double haversine(double lat1, double lng1, double lat2, double lng2, double earthRadius) {
-  double lat1Rad = toRads(lat1);  //latitude/longitude to radians
-  double lng1Rad = toRads(lng1);
-  double lat2Rad = toRads(lat2);
-  double lng2Rad = toRads(lng2);
+float haversine(float lat1, float lng1, float lat2, float lng2, float earthRadius) {
+  float lat1Rad = toRads(lat1);  //latitude/longitude to radians
+  float lng1Rad = toRads(lng1);
+  float lat2Rad = toRads(lat2);
+  float lng2Rad = toRads(lng2);
 
-  double dLng = lng2Rad - lng1Rad;  //difference
-  double dLat = lat2Rad - lat1Rad;
+  float dLng = lng2Rad - lng1Rad;  //difference
+  float dLat = lat2Rad - lat1Rad;
 
-  double a = pow(sin(dLat / 2.0), 2) + cos(lat1Rad) * cos(lat2Rad) * pow(sin(dLng / 2.0), 2);  //sin(dLat/2)^2 + cos(lat1) + cos(lat2) + sin(dLng/2)^2
-  double c = 2 * asin(sqrt(a));                                                                // arcsin(sqrt(a))*2
+  float a = pow(sinf(dLat / 2.0), 2) + cosf(lat1Rad) * cosf(lat2Rad) * pow(sinf(dLng / 2.0), 2);  //sin(dLat/2)^2 + cos(lat1) + cos(lat2) + sin(dLng/2)^2
+  float c = 2 * asinf(sqrt(a));                                                                // arcsin(sqrt(a))*2
   return earthRadius * c;                                                                      //total distance (delta)
 }
 
@@ -167,6 +163,7 @@ void loop() {
   while (GPS_Serial.available()) {
     ++gpsConnection;
     gps.encode(GPS_Serial.read());
+    //Serial.write(GPS_Serial.read());
     if(gps.location.isUpdated() && (millis()-lastUpdateTime) > 50){ //prevent double update/debouncing
       updatePos();
       if (printLoc == true) {
@@ -206,7 +203,7 @@ void loop() {
 
       if (token != NULL) {
         int storedValue = preferences.getInt(token);
-        Serial.printf("Value of %s is %d", token, storedValue);
+        Serial.printf("Value of %s is %d \n", token, storedValue);
       }else{
         Serial.println("Error: Invalid print command.");
       }
@@ -214,12 +211,8 @@ void loop() {
       printLoc = false;
       Serial.println("stopping printing");
     } else {
-      Serial.printf("Unknown command: %s", command);
+      Serial.printf("Unknown command: %s \n", command);
     }
   }
-  // Prevent watchdog reset if GPS data isn't coming in
-  delay(10);  // or use yield(); i have no idea what this does hehe
+  delay(10);  //slow em down
 }
-
-// expected location:
-// Latitude: 39.206317, Longitude: -76.931592
