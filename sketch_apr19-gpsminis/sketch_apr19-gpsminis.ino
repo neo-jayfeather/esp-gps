@@ -216,7 +216,11 @@ void loop() {
   }
   delay(10);  //slow em down
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 }
+=======
+}
+>>>>>>> Stashed changes
 =======
 }
 >>>>>>> Stashed changes

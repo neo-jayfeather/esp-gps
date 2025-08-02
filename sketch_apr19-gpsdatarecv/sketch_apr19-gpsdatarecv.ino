@@ -1,5 +1,6 @@
 #include <WiFi.h>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 #include <WebServer.h>
 
 // Replace with your actual Wi-Fi network credentials
@@ -376,6 +377,11 @@ void handleGpsData() {
 const char* ssid = "chad boothe's duck-fi";
 const char* ssid = "java is a bad language";
 
+=======
+const char* ssid = "chad boothe's duck-fi";
+const char* ssid = "java is a bad language";
+
+>>>>>>> Stashed changes
 const unsigned char acceptedMacs[8][6] = {
   {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // maybe just as one number? 
   {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // make sure the assigned numbers are correct!!!!
@@ -451,6 +457,7 @@ void handleWifiStatus() {
 // Setup function: runs once when the ESP32 starts
 void setup() {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   Serial.begin(115200); // Initialize serial communication for debugging
 
   // Connect to Wi-Fi in Station (STA) mode
@@ -512,6 +519,8 @@ void loop() {
   // --- End GPS update example ---
 }
 =======
+=======
+>>>>>>> Stashed changes
   Serial.begin(115200);
   WiFi.mode(WIFI_STA);
 
@@ -548,5 +557,9 @@ void loop() {
       }
     }
   }
+<<<<<<< Updated upstream
+}
+>>>>>>> Stashed changes
+=======
 }
 >>>>>>> Stashed changes
