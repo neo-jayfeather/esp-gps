@@ -15,3 +15,10 @@ An esp32 gps module interfacing project, intended for cross-country (XC) run tra
 ## software
 - all software is included in the project (more documentation soon)
 - poorly developed!
+
+# Updates
+4/21
+![test](doc/img/PXL_20260418_012818839.jpg)
+![test](doc/img/PXL_20260418_012827335.jpg)
+![test](doc/img/PXL_20260419_223806401.jpg)
+![test](doc/img/PXL_20260420_004331734.jpg)
